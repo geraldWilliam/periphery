@@ -42,6 +42,18 @@ open class SourceGraphTestCase: XCTestCase {
         scopeStack.removeLast()
     }
 
+    func assertCommandIgnored(_ description: DeclarationDescription, scopedAssertions: (() -> Void)? = nil, file: StaticString = #file, line: UInt = #line) {
+        guard let declaration = materialize(description, file: file, line: line) else { return }
+
+        if !graph.commandIgnoredDeclarations.contains(declaration) {
+            XCTFail("Expected declaration to be command-ignored: \(declaration)", file: file, line: line)
+        }
+
+        scopeStack.append(.declaration(declaration))
+        scopedAssertions?()
+        scopeStack.removeLast()
+    }
+
     func assertNotReferenced(_ description: DeclarationDescription, scopedAssertions: (() -> Void)? = nil, file: StaticString = #file, line: UInt = #line) {
         guard let declaration = materialize(description, file: file, line: line) else { return }
 
