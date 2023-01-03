@@ -1,9 +1,7 @@
 import Foundation
 import XCTest
 import SwiftSyntax
-#if canImport(SwiftSyntaxParser)
 import SwiftSyntaxParser
-#endif
 @testable import TestShared
 @testable import PeripheryKit
 
@@ -91,8 +89,7 @@ class TypeSyntaxInspectorTest: XCTestCase {
         let genericFunctionArgument = results[fixtureLocation(line: 15, column: 58)]
         XCTAssertEqual(genericFunctionArgument?.type, "T.Type")
         XCTAssertEqual(genericFunctionArgument?.locations, [
-            fixtureLocation(line: 15, column: 58),
-            fixtureLocation(line: 15, column: 60)
+            fixtureLocation(line: 15, column: 58)
         ])
 
         let genericParamClause = results[fixtureLocation(line: 15, column: 25)]

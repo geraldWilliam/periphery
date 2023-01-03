@@ -30,8 +30,7 @@ final class RetentionTest: SourceGraphTestCase {
             driver = SPMProjectDriver(
                 package: package,
                 targets: targets.compactMap { $0 },
-                configuration: configuration,
-                logger: inject()
+                configuration: configuration
             )
             try! driver.build()
         }
@@ -565,6 +564,9 @@ final class RetentionTest: SourceGraphTestCase {
                 // Not referenced because the enclosing class does not conform to Codable.
                 self.assertNotReferenced(.enum("CodingKeys"))
             }
+          assertReferenced(.struct("FixtureClass120")) {
+              self.assertReferenced(.enum("CodingKeys"))
+          }
         }
     }
 
@@ -918,7 +920,7 @@ final class RetentionTest: SourceGraphTestCase {
     }
 
     func testRetainsEncodableProperties() {
-        let configuration = inject(Configuration.self)
+        let configuration = Configuration.shared
         // CustomStringConvertible doesn't actually inherit Encodable, we're just using it because we don't have an
         // external module in which to declare our own type.
         configuration.externalEncodableProtocols = ["CustomStringConvertible"]
@@ -1019,6 +1021,15 @@ final class RetentionTest: SourceGraphTestCase {
             // handle properties at global (file) scope. This will remain broken until the
             // issue is resolved in Swift: https://github.com/apple/swift/issues/61509.
             self.assertNotReferenced(.varGlobal("fixtureClass117StaticProperty"))
+        }
+    }
+
+    func testDoesNotRetainLazyProperty() {
+        analyze(retainPublic: true) {
+            assertReferenced(.class("FixtureClass36")) {
+                self.assertNotReferenced(.varInstance("someLazyVar"))
+                self.assertNotReferenced(.varInstance("someVar"))
+            }
         }
     }
 
@@ -1563,6 +1574,15 @@ final class RetentionTest: SourceGraphTestCase {
 
     // MARK: - Known Failures
 
+    func testMainActorAnnotation() {
+        guard performKnownFailures else { return }
+
+        analyze(retainPublic: true) {
+            assertReferenced(.class("FixtureClass132"))
+            assertReferenced(.class("FixtureClass133"))
+        }
+    }
+
     // https://bugs.swift.org/browse/SR-14181
     func testSelfReferencedConstructor() {
         guard performKnownFailures else { return }
@@ -1608,18 +1628,6 @@ final class RetentionTest: SourceGraphTestCase {
             }
             assertReferenced(.protocol("FixtureProtocol100")) {
                 self.assertReferenced(.varInstance("someGetSetVar"))
-            }
-        }
-    }
-
-    // https://bugs.swift.org/browse/SR-13767
-    func testDoesNotRetainLazyProperty() {
-        guard performKnownFailures else { return }
-
-        analyze(retainPublic: true) {
-            assertReferenced(.class("FixtureClass36")) {
-                self.assertNotReferenced(.varInstance("someLazyVar"))
-                self.assertNotReferenced(.varInstance("someVar"))
             }
         }
     }
@@ -1672,7 +1680,7 @@ final class RetentionTest: SourceGraphTestCase {
             graph.markRetained(declaration)
         }
 
-        try! Analyzer.perform(graph: graph)
+        try! SourceGraphMutatorRunner.perform(graph: graph)
         try testBlock()
 
         if (testRun?.failureCount ?? 0) > 0 {

@@ -1,9 +1,7 @@
 import Foundation
 import SystemPackage
 import SwiftSyntax
-#if canImport(SwiftSyntaxParser)
 import SwiftSyntaxParser
-#endif
 
 protocol Item: AnyObject {
     var items: [Item] { get }
@@ -239,19 +237,13 @@ struct UnusedParameterParser {
         if let optionalType = syntax.type?.as(OptionalTypeSyntax.self) {
             if let metatypeSyntax = optionalType.children(viewMode: .sourceAccurate).mapFirst({ $0.as(MetatypeTypeSyntax.self) }) {
                 metatype = metatypeSyntax.description
-            } else if let memberType = optionalType.children(viewMode: .sourceAccurate).mapFirst({ $0.as(MemberTypeIdentifierSyntax.self) }) {
-                metatype = parseMetatype(from: memberType)
             }
         } else if let optionalType = syntax.type?.as(ImplicitlyUnwrappedOptionalTypeSyntax.self) {
             if let metatypeSyntax = optionalType.children(viewMode: .sourceAccurate).mapFirst({ $0.as(MetatypeTypeSyntax.self) }) {
                 metatype = metatypeSyntax.description
-            } else if let memberType = optionalType.children(viewMode: .sourceAccurate).mapFirst({ $0.as(MemberTypeIdentifierSyntax.self) }) {
-                metatype = parseMetatype(from: memberType)
             }
         } else if let metatypeSyntax = syntax.type?.as(MetatypeTypeSyntax.self) {
             metatype = metatypeSyntax.description
-        } else if let memberType = syntax.type?.as(MemberTypeIdentifierSyntax.self) {
-            metatype = parseMetatype(from: memberType)
         }
 
         let positionSyntax: SyntaxProtocol = (syntax.secondName ?? syntax.firstName) ?? syntax
@@ -261,16 +253,6 @@ struct UnusedParameterParser {
                          secondName: syntax.secondName?.text,
                          metatype: metatype,
                          location: location)
-    }
-
-    private func parseMetatype(from syntax: MemberTypeIdentifierSyntax) -> String? {
-        // Workaround change in latest SwiftSyntax where T.Type and T.Protocol are no longer a MetatypeTypeSyntax.
-        let memberName = syntax.name.text
-        if memberName == "Type" || memberName == "Protocol" {
-            return syntax.description
-        }
-
-        return nil
     }
 
     private func parse<T>(closureExpr syntax: ClosureExprSyntax, _ collector: Collector<T>?) -> Closure? {

@@ -62,19 +62,3 @@ final class SourceGraphDebugger {
         }
     }
 }
-
-final class SourceGraphDebuggerVisitor: SourceGraphVisitor {
-    static func make(graph: SourceGraph) -> Self {
-        return self.init(graph: graph)
-    }
-
-    private let debugger: SourceGraphDebugger
-
-    required init(graph: SourceGraph) {
-        debugger = SourceGraphDebugger(graph: graph)
-    }
-
-    func visit() {
-        debugger.describeGraph()
-    }
-}

@@ -12,13 +12,12 @@ class SPMProjectTest: SourceGraphTestCase {
             let driver = SPMProjectDriver(
                 package: package,
                 targets: package.targets,
-                configuration: configuration,
-                logger: inject()
+                configuration: configuration
             )
 
             try! driver.build()
             try! driver.index(graph: graph)
-            try! Analyzer.perform(graph: graph)
+            try! SourceGraphMutatorRunner.perform(graph: graph)
         }
     }
 

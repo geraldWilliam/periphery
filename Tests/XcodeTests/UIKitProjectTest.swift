@@ -8,20 +8,18 @@ class UIKitProjectTest: SourceGraphTestCase {
     override static func setUp() {
         super.setUp()
 
-        let project = try! XcodeProject.make(path: UIKitProjectPath)
+        let project = try! XcodeProject(path: UIKitProjectPath)
 
         let driver = XcodeProjectDriver(
-            logger: inject(),
             configuration: configuration,
-            xcodebuild: inject(),
             project: project,
-            schemes: [try! XcodeScheme.make(project: project, name: "UIKitProject")],
+            schemes: [try! XcodeScheme(project: project, name: "UIKitProject")],
             targets: project.targets
         )
 
         try! driver.build()
         try! driver.index(graph: graph)
-        try! Analyzer.perform(graph: graph)
+        try! SourceGraphMutatorRunner.perform(graph: graph)
     }
 
     func testRetainsMainAppEntryPoint() {
