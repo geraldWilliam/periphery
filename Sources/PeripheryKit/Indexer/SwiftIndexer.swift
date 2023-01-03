@@ -319,11 +319,11 @@ public final class SwiftIndexer: Indexer {
             let fileCommands = CommentCommand.parseCommands(in: syntaxVisitor.syntax.leadingTrivia)
 
             if fileCommands.contains(.ignoreAll) {
-                retainHierarchy(declarations)
+                markCommandIgnored(declarations)
             } else {
                 for decl in declarations {
                     if decl.commentCommands.contains(.ignore) {
-                        retainHierarchy([decl])
+                        markCommandIgnored([decl])
                     }
                 }
             }
@@ -369,11 +369,11 @@ public final class SwiftIndexer: Indexer {
             }
         }
 
-        private func retainHierarchy(_ decls: [Declaration]) {
+        private func markCommandIgnored(_ decls: [Declaration]) {
             decls.forEach {
-                graph.markRetained($0)
-                $0.unusedParameters.forEach { graph.markRetained($0) }
-                retainHierarchy(Array($0.declarations))
+                graph.markCommandIgnored($0)
+                $0.unusedParameters.forEach { graph.markCommandIgnored($0) }
+                markCommandIgnored(Array($0.declarations))
             }
         }
 

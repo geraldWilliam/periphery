@@ -6,6 +6,7 @@ public struct ScanResultBuilder {
         let removableDeclarations = graph.unusedDeclarations.subtracting(assignOnlyProperties)
         let redundantProtocols = graph.redundantProtocols.filter { !removableDeclarations.contains($0.0) }
         let redundantPublicAccessibility = graph.redundantPublicAccessibility.filter { !removableDeclarations.contains($0.0) }
+        let superfluouslyIgnoredDeclarations = graph.usedDeclarations.intersection(graph.commandIgnoredDeclarations)
 
         let annotatedRemovableDeclarations: [ScanResult] = removableDeclarations.map {
             .init(declaration: $0, annotation: .unused)
@@ -19,10 +20,14 @@ public struct ScanResultBuilder {
         let annotatedRedundantPublicAccessibility: [ScanResult] = redundantPublicAccessibility.map {
             .init(declaration: $0.0, annotation: .redundantPublicAccessibility(modules: $0.1))
         }
+        let annotatedSuperfluouslyIgnoredDeclarations: [ScanResult] = superfluouslyIgnoredDeclarations.map {
+            .init(declaration: $0, annotation: .superfluouslyIgnored)
+        }
         let allAnnotatedDeclarations = annotatedRemovableDeclarations +
             annotatedAssignOnlyProperties +
             annotatedRedundantProtocols +
-            annotatedRedundantPublicAccessibility
+            annotatedRedundantPublicAccessibility +
+            annotatedSuperfluouslyIgnoredDeclarations
 
         return allAnnotatedDeclarations
             .filter {

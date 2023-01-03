@@ -4,6 +4,7 @@ import Shared
 public final class SourceGraph {
     private(set) public var allDeclarations: Set<Declaration> = []
     private(set) public var usedDeclarations: Set<Declaration> = []
+    private(set) public var commandIgnoredDeclarations: Set<Declaration> = []
     private(set) public var redundantProtocols: [Declaration: Set<Reference>] = [:]
     private(set) public var rootDeclarations: Set<Declaration> = []
     private(set) public var redundantPublicAccessibility: [Declaration: Set<String>] = [:]
@@ -101,6 +102,16 @@ public final class SourceGraph {
         _ = retainedDeclarations.insert(declaration)
     }
 
+    func markCommandIgnored(_ declaration: Declaration) {
+        mutationQueue.sync {
+            markCommandIgnoredUnsafe(declaration)
+        }
+    }
+
+    func markCommandIgnoredUnsafe(_ declaration: Declaration) {
+        _ = commandIgnoredDeclarations.insert(declaration)
+    }
+
     func markPotentialAssignOnlyProperty(_ declaration: Declaration) {
         mutationQueue.sync {
             _ = potentialAssignOnlyProperties.insert(declaration)
@@ -115,7 +126,7 @@ public final class SourceGraph {
 
     func isRetained(_ declaration: Declaration) -> Bool {
         mutationQueue.sync {
-            retainedDeclarations.contains(declaration)
+            retainedDeclarations.union(commandIgnoredDeclarations).contains(declaration)
         }
     }
 
