@@ -8,18 +8,12 @@ class UIKitProjectTest: SourceGraphTestCase {
     override static func setUp() {
         super.setUp()
 
-        let project = try! XcodeProject(path: UIKitProjectPath)
+        configuration.project = UIKitProjectPath.string
+        configuration.schemes = ["UIKitProject"]
+        configuration.targets = ["UIKitProject", "NotificationServiceExtension", "UIKitProjectTests", "LocalPackage.LocalPackageTarget", "LocalPackage.LocalPackageTargetTests"]
 
-        let driver = XcodeProjectDriver(
-            configuration: configuration,
-            project: project,
-            schemes: [try! XcodeScheme(project: project, name: "UIKitProject")],
-            targets: project.targets
-        )
-
-        try! driver.build()
-        try! driver.index(graph: graph)
-        try! SourceGraphMutatorRunner.perform(graph: graph)
+        build(driver: XcodeProjectDriver.self)
+        index()
     }
 
     func testRetainsMainAppEntryPoint() {
@@ -91,5 +85,11 @@ class UIKitProjectTest: SourceGraphTestCase {
 
     func testRetainsCoreDataEntityMigrationPolicySubclass() {
         assertReferenced(.class("CustomEntityMigrationPolicy"))
+    }
+
+    func testLocalPackageReferences() {
+        assertReferenced(.struct("LocalPackageUsedType"))
+        assertReferenced(.struct("LocalPackageUsedInTestType"))
+        assertNotReferenced(.struct("LocalPackageUnusedType"))
     }
 }
